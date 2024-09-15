@@ -1,0 +1,10 @@
+pandas
+numpy
+plotly
+SQLAlchemy
+extra_streamlit_components
+streamlit
+streamlit-shadcn-ui
+streamlit_extras
+streamlit-pandas-profiling
+geopandas
