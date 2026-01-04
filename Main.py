@@ -1,25 +1,37 @@
 import plotly.express as px
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
 import streamlit_shadcn_ui as ui
+import sys
+sys.path.insert(0, '.')
+
+from utils.config import (
+    load_data_cached,
+    load_insurance_state_data,
+    render_breadcrumbs,
+    format_currency,
+    format_number,
+    COLORS,
+    PLOTLY_SCALES
+)
 
 # Set Streamlit page configuration
 st.set_page_config(
-    page_title="Visualisation",
+    page_title="PhonePe - Home",
     layout="wide",
-    initial_sidebar_state = "collapsed",
-    page_icon=":graph:",
+    initial_sidebar_state="collapsed",
+    page_icon="🏠",
 )
 
+# Render breadcrumb navigation
+render_breadcrumbs("Main")
 
-# Create a function to load data from the SQLite database
+
+# Create a cached function to load data from the SQLite database
+@st.cache_data(ttl=3600)
 def load_data_from_db(query):
-    sqlite_file = 'test.sqlite'
-    engine = create_engine(f'sqlite:///{sqlite_file}')
-    df = pd.read_sql(query, engine)
-    return df
-
+    """Load data with caching for better performance."""
+    return load_data_cached(query)
 
 
 
@@ -167,14 +179,7 @@ charts.write("Total transaction proportion by year")
 charts.plotly_chart(fig2, theme="streamlit", use_container_width=True)
 charts.header('container check')
 
-fig2 = px.pie(df1, values='total_amount', names='year')
-st.plotly_chart(fig2, theme="streamlit", use_container_width=True)
 
-fig3 = px.pie(df1, values='total_amount', names='state', hole=.6, hover_data=['number_of_transactions'])
-st.plotly_chart(fig3, theme="streamlit", use_container_width=True)
-
-fig4 = px.bar(df, x="state", y="number_of_transactions", color="state", title="Total Transactions by State")
-st.plotly_chart(fig4, theme="streamlit", use_container_width=True)
 
 
 # Showing metric data
