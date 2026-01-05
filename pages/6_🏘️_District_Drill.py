@@ -224,10 +224,11 @@ st.markdown(f"### 🏆 Top {selected_entity.title()} Analysis")
 
 if 'entity_name' in filtered_df.columns and value_col in filtered_df.columns:
     # Aggregate by entity
-    entity_agg = filtered_df.groupby('entity_name').agg({
-        value_col: 'sum',
-        count_col: 'sum'
-    }).reset_index()
+    agg_dict = {value_col: 'sum'}
+    if count_col in filtered_df.columns:
+        agg_dict[count_col] = 'sum'
+        
+    entity_agg = filtered_df.groupby('entity_name').agg(agg_dict).reset_index()
     entity_agg = entity_agg.sort_values(value_col, ascending=False)
     
     chart_col1, chart_col2 = st.columns(2)
@@ -267,12 +268,21 @@ if 'entity_name' in filtered_df.columns and value_col in filtered_df.columns:
         st.markdown("---")
         st.markdown("### 🗺️ State-wise Distribution")
 
-        state_agg = filtered_df.groupby('state').agg({
+        agg_dict = {
             value_col: 'sum',
-            count_col: 'sum',
             'entity_name': 'nunique'
-        }).reset_index()
-        state_agg.columns = ['State', 'Total Amount' if data_type != "Users" else 'Total Users', 'Transaction Count', f'{selected_entity.title()} Count']
+        }
+        if count_col in filtered_df.columns:
+            agg_dict[count_col] = 'sum'
+            
+        state_agg = filtered_df.groupby('state').agg(agg_dict).reset_index()
+        
+        cols = ['State', 'Total Amount' if data_type != "Users" else 'Total Users']
+        if count_col in filtered_df.columns:
+            cols.append('Transaction Count')
+        cols.append(f'{selected_entity.title()} Count')
+        
+        state_agg.columns = cols
         state_agg = state_agg.sort_values(state_agg.columns[1], ascending=False)
 
         map_col, table_col = st.columns([3, 2])
@@ -300,7 +310,8 @@ if 'entity_name' in filtered_df.columns and value_col in filtered_df.columns:
                 display_state['Total Amount'] = display_state['Total Amount'].apply(format_currency)
             else:
                 display_state['Total Users'] = display_state['Total Users'].apply(format_number)
-            display_state['Transaction Count'] = display_state['Transaction Count'].apply(format_number)
+            if 'Transaction Count' in display_state.columns:
+                display_state['Transaction Count'] = display_state['Transaction Count'].apply(format_number)
             ui.table(data=display_state, maxHeight=450, key="state_ranking_table")
 
     # =============================================================================
@@ -310,10 +321,11 @@ if 'entity_name' in filtered_df.columns and value_col in filtered_df.columns:
         st.markdown("---")
         st.markdown("### 📈 Quarterly Trends")
 
-        quarterly_agg = filtered_df.groupby(['year', 'quarter']).agg({
-            value_col: 'sum',
-            count_col: 'sum'
-        }).reset_index()
+        agg_dict = {value_col: 'sum'}
+        if count_col in filtered_df.columns:
+            agg_dict[count_col] = 'sum'
+            
+        quarterly_agg = filtered_df.groupby(['year', 'quarter']).agg(agg_dict).reset_index()
         quarterly_agg['period'] = quarterly_agg['year'].astype(str) + '-Q' + quarterly_agg['quarter'].astype(str)
 
         trend_col1, trend_col2 = st.columns(2)
@@ -331,16 +343,19 @@ if 'entity_name' in filtered_df.columns and value_col in filtered_df.columns:
             st.plotly_chart(fig_trend, use_container_width=True)
 
         with trend_col2:
-            fig_trend_count = px.bar(
-                quarterly_agg,
-                x='period',
-                y=count_col,
-                title='📊 Transaction Count by Quarter',
-                labels={count_col: 'Transaction Count', 'period': 'Period'},
-                color='year',
-                color_discrete_sequence=COLORS['categorical']
-            )
-            st.plotly_chart(fig_trend_count, use_container_width=True)
+            if count_col in quarterly_agg.columns:
+                fig_trend_count = px.bar(
+                    quarterly_agg,
+                    x='period',
+                    y=count_col,
+                    title='📊 Transaction Count by Quarter',
+                    labels={count_col: 'Transaction Count', 'period': 'Period'},
+                    color='year',
+                    color_discrete_sequence=COLORS['categorical']
+                )
+                st.plotly_chart(fig_trend_count, use_container_width=True)
+            else:
+                st.info("Transaction count data not available for this category.")
 
     # =============================================================================
     # Detailed Table
@@ -348,17 +363,21 @@ if 'entity_name' in filtered_df.columns and value_col in filtered_df.columns:
     st.markdown("---")
     st.markdown(f"### 📋 Detailed {selected_entity.title()} Data")
 
-    # Prepare display dataframe
     display_df = entity_agg.head(20).copy()
-    display_df.columns = [selected_entity.title()[:-1] if selected_entity.endswith('s') else selected_entity, 
-                          'Amount' if data_type != "Users" else 'Users', 'Transactions']
+    
+    label = 'Amount' if data_type != "Users" else 'Users'
+    cols = [selected_entity.title()[:-1] if selected_entity.endswith('s') else selected_entity, label]
     
     if data_type != "Users":
-        display_df['Amount'] = display_df['Amount'].apply(format_currency)
+        display_df[value_col] = display_df[value_col].apply(format_currency)
     else:
-        display_df['Users'] = display_df['Users'].apply(format_number)
+        display_df[value_col] = display_df[value_col].apply(format_number)
     
-    display_df['Transactions'] = display_df['Transactions'].apply(format_number)
+    if count_col in display_df.columns:
+        display_df[count_col] = display_df[count_col].apply(format_number)
+        cols.append('Transactions')
+        
+    display_df.columns = cols
 
     with st.expander("📊 View Detailed Data", expanded=True):
         ui.table(data=display_df, maxHeight=400, key="detailed_entity_table")

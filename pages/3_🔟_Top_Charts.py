@@ -252,10 +252,11 @@ if 'Statewise' in selected_tab and 'state' in filtered_df.columns:
     st.markdown("### 🗺️ Geographic Distribution")
     
     # Aggregate by state
-    state_data = filtered_df.groupby('state').agg({
-        value_col: 'sum',
-        count_col: 'sum'
-    }).reset_index()
+    agg_dict = {value_col: 'sum'}
+    if count_col in filtered_df.columns:
+        agg_dict[count_col] = 'sum'
+        
+    state_data = filtered_df.groupby('state').agg(agg_dict).reset_index()
     
     map_col, stats_col = st.columns([3, 2])
     
@@ -283,8 +284,12 @@ if 'Statewise' in selected_tab and 'state' in filtered_df.columns:
         else:
             top_states[value_col] = top_states[value_col].apply(format_currency)
         
-        top_states[count_col] = top_states[count_col].apply(format_number)
-        top_states.columns = ['State', config['value_label'], 'Transactions']
+        cols = ['State', config['value_label']]
+        if count_col in top_states.columns:
+            top_states[count_col] = top_states[count_col].apply(format_number)
+            cols.append('Transactions')
+            
+        top_states.columns = cols
         
         ui.table(data=top_states, maxHeight=450, key="state_rankings")
 
@@ -295,10 +300,11 @@ st.markdown("### 🏅 Top Entities Ranking")
 
 if 'entity_name' in filtered_df.columns and value_col in filtered_df.columns:
     # Aggregate by entity
-    entity_data = filtered_df.groupby('entity_name').agg({
-        value_col: 'sum',
-        count_col: 'sum'
-    }).reset_index()
+    agg_dict = {value_col: 'sum'}
+    if count_col in filtered_df.columns:
+        agg_dict[count_col] = 'sum'
+        
+    entity_data = filtered_df.groupby('entity_name').agg(agg_dict).reset_index()
     entity_data = entity_data.sort_values(value_col, ascending=False)
     
     chart_col1, chart_col2 = st.columns(2)
@@ -371,6 +377,8 @@ if 'entity_name' in filtered_df.columns and value_col in filtered_df.columns:
             )
             fig_scatter.update_layout(showlegend=False, height=400)
             st.plotly_chart(fig_scatter, use_container_width=True)
+        else:
+            st.info("Scatter analysis (Value vs Count) is not available for this category.")
 
 # ***************************************Data Table*******************************
 
