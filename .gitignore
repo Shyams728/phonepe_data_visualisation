@@ -1,2 +1,20 @@
-.venv
-__pycache__
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Databases
+*.sqlite
+*.db
+
+# Streamlit
+.streamlit/
+
+# IDEs
+.vscode/
+.idea/
