@@ -1,3 +1,9 @@
+"""Main entry point for the PhonePe Pulse Data Visualization Streamlit app.
+
+This dashboard visualizes PhonePe transaction, user, and insurance metrics across India.
+Run with: `streamlit run Main.py`
+"""
+
 import plotly.express as px
 import streamlit as st
 import pandas as pd
@@ -26,6 +32,9 @@ st.set_page_config(
 # Render breadcrumb navigation
 render_breadcrumbs("Main")
 
+# Add a short app header and description
+st.title("PhonePe Pulse Data Visualization")
+st.markdown("Visualize PhonePe Pulse transaction, user, and insurance metrics across India. Use the sidebar to navigate pages and apply filters.")
 
 # Create a cached function to load data from the SQLite database
 @st.cache_data(ttl=3600)
@@ -137,9 +146,9 @@ agg_df = df.groupby(["state", "year"]).agg({
 # Display metrics in two columns
 cols = st.columns(2)
 with cols[0]:
-    ui.metric_card(title="Total Insurence Amount ", content=f"₹{df.total_amount.sum()}", description="Total insurence amount from state transactions", key="card1")
+    ui.metric_card(title="Total Insurance Amount", content=f"₹{df.total_amount.sum()}", description="Total insurance amount from state transactions", key="card1")
 with cols[1]:
-    ui.metric_card(title="Total Number of Transactions", content=f"{df.number_of_transactions.sum()}", description="Total Number of Transactions from state insurence", key="card2")
+    ui.metric_card(title="Total Number of Transactions", content=f"{df.number_of_transactions.sum()}", description="Total number of transactions from state insurance", key="card2")
 # st.markdown('---')
 ui.table(data=df.head(), maxHeight=300)
 # Create a scatter plot using Plotly Express
@@ -182,16 +191,4 @@ charts.header('container check')
 
 
 
-# Showing metric data
-temp = st.container()
-col1, col2, col3 = temp.columns(3)
-one = col1.container(border=True)
-two = col2.container(border=True)
-three = col3.container(border=True)
 
-# Metrics for column one
-one.metric(label= "__Total Insurence Amount__", value=f"₹{df.total_amount.sum()}", delta="Total insurence amount from state transactions", delta_color = 'off')
-# Metrics for column two
-two.metric(label="Wind", value="17 mph", delta="-8%")
-# Metrics for column three
-three.metric(label="Humidity", value="86%", delta="4%")
