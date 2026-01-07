@@ -1,6 +1,10 @@
 # PhonePe Pulse Data Visualisation 📈
 
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=streamlit)](https://shyamsphonepedatavisualisation.streamlit.app/)
+
 A comprehensive Streamlit dashboard for visualizing PhonePe Pulse data, providing insights into transactions, users, and insurance metrics across India.
+
+![Dashboard Preview](https://raw.githubusercontent.com/Shyams728/phonepe_data_visualisation/main/visualization.png))
 
 ## 🚀 Features
 
